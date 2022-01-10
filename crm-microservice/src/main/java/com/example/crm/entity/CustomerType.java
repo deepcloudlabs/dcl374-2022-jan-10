@@ -1,5 +1,5 @@
 package com.example.crm.entity;
 
 public enum CustomerType {
-	STANDARD, GOLD
+	BRONZ, STANDARD, GOLD, SILVER
 }
