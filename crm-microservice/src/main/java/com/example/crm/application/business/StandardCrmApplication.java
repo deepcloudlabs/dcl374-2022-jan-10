@@ -1,74 +1,87 @@
 package com.example.crm.application.business;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import org.modelmapper.ModelMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.crm.application.CrmApplication;
 import com.example.crm.application.business.exception.CustomerAlreadyExistException;
 import com.example.crm.application.business.exception.CustomerNotFoundException;
+import com.example.crm.dto.request.AcquireCustomerRequest;
+import com.example.crm.dto.request.UpdateCustomerRequest;
+import com.example.crm.dto.response.AcquireCustomerResponse;
+import com.example.crm.dto.response.CustomerResponse;
+import com.example.crm.dto.response.DeleteCustomerResponse;
+import com.example.crm.dto.response.DetailedCustomerResponse;
+import com.example.crm.dto.response.PatchCustomerResponse;
+import com.example.crm.dto.response.UpdateCustomerResponse;
 import com.example.crm.entity.Customer;
 import com.example.crm.repository.CustomerJpaRepository;
 
 @Service
+@ConditionalOnProperty(name = "crm.persistence", havingValue = "relational")
 public class StandardCrmApplication implements CrmApplication {
 	private CustomerJpaRepository customerJpaRepository;
-	
-	public StandardCrmApplication(CustomerJpaRepository customerJpaRepository) {
+	private ModelMapper modelMapper;
+
+	public StandardCrmApplication(CustomerJpaRepository customerJpaRepository, ModelMapper modelMapper) {
 		this.customerJpaRepository = customerJpaRepository;
-        System.err.println(customerJpaRepository.getClass().getName());
+		this.modelMapper = modelMapper;
+		System.err.println(customerJpaRepository.getClass().getName());
 	}
 
 	@Override
-	public Customer findCustomerByIdentity(String identity) {
-		return customerJpaRepository.findById(identity)
-				                    .orElseThrow(() -> new CustomerNotFoundException());
+	public DetailedCustomerResponse findCustomerByIdentity(String identity) {
+		var customer = customerJpaRepository.findById(identity).orElseThrow(() -> new CustomerNotFoundException());
+		return modelMapper.map(customer, DetailedCustomerResponse.class);
 	}
 
 	@Override
-	public List<Customer> findAllByPage(int pageNo, int pageSize) {
-		var page = PageRequest.of(pageNo, pageSize);
-		return customerJpaRepository.findAll(page).getContent();
+	public List<CustomerResponse> findAllByPage(int pageNo, int pageSize) {
+		return customerJpaRepository.findAll(PageRequest.of(pageNo, pageSize)).getContent().stream()
+				.map(cust -> modelMapper.map(cust, CustomerResponse.class)).toList();
 	}
 
 	@Override
 	@Transactional(isolation = Isolation.DEFAULT)
-	public Customer addCustomer(Customer customer) {
-		var identity = customer.getIdentity();
+	public AcquireCustomerResponse addCustomer(AcquireCustomerRequest request) {
+		var identity = request.getIdentity();
 		if (customerJpaRepository.existsById(identity))
 			throw new CustomerAlreadyExistException();
-		return customerJpaRepository.save(customer);                     
+		var customer = modelMapper.map(request, Customer.class);
+		return modelMapper.map(customerJpaRepository.save(customer), AcquireCustomerResponse.class);
 	}
 
 	@Override
 	@Transactional
-	public Customer updateCustomer(String identity, Customer customer) {
-		var managedCustomer = 
-				customerJpaRepository.findById(identity)
-				                     .orElseThrow( () -> new CustomerNotFoundException()) ;
-		managedCustomer.setPhone(customer.getPhone());
-		managedCustomer.setPhoto(customer.getPhoto());
-		managedCustomer.setEmail(customer.getEmail());
-		managedCustomer.setType(customer.getType());
-		managedCustomer.setFullname(customer.getFullname());
-		//managedCustomer.setAddresses(customer.getAddresses());
-		customerJpaRepository.flush();
-		return managedCustomer;
+	public UpdateCustomerResponse updateCustomer(String identity, UpdateCustomerRequest request) {
+		var managedCustomer = customerJpaRepository.findById(identity)
+				.orElseThrow(() -> new CustomerNotFoundException());
+		managedCustomer.setPhone(request.getPhone());
+		String photo = request.getPhoto();
+		if (Objects.nonNull(photo))
+		   managedCustomer.setPhoto(photo.getBytes());
+		managedCustomer.setEmail(request.getEmail());
+		managedCustomer.setType(request.getType());
+		managedCustomer.setFullname(request.getFullname());
+		// managedCustomer.setAddresses(customer.getAddresses());
+		// customerJpaRepository.flush();
+		return modelMapper.map(managedCustomer, UpdateCustomerResponse.class);
 	}
 
 	@Override
 	@Transactional
-	public Customer patchCustomer(String identity, Map<String, Object> changes) {
-		var managedCustomer = 
-				customerJpaRepository.findById(identity)
-				                     .orElseThrow( () -> new CustomerNotFoundException()) ;
-		for(var entry : changes.entrySet()) {
+	public PatchCustomerResponse patchCustomer(String identity, Map<String, Object> request) {
+		var managedCustomer = customerJpaRepository.findById(identity)
+				.orElseThrow(() -> new CustomerNotFoundException());
+		for (var entry : request.entrySet()) {
 			var attribute = entry.getKey();
 			var value = entry.getValue();
 			System.err.println(entry);
@@ -77,22 +90,20 @@ public class StandardCrmApplication implements CrmApplication {
 				field.setAccessible(true);
 				field.set(managedCustomer, value);
 				field.setAccessible(false);
-			} catch (IllegalArgumentException | 
-					IllegalAccessException | NoSuchFieldException | SecurityException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
 				System.err.println(e.getMessage());
 			}
 		}
-		return managedCustomer;
+		return modelMapper.map(managedCustomer, PatchCustomerResponse.class);
 	}
 
 	@Override
 	@Transactional
-	public Customer removeCustomerByIdentity(String identity) {
-		var managedCustomer = 
-				customerJpaRepository.findById(identity)
-				                     .orElseThrow( () -> new CustomerNotFoundException()) ;
+	public DeleteCustomerResponse removeCustomerByIdentity(String identity) {
+		var managedCustomer = customerJpaRepository.findById(identity)
+				.orElseThrow(() -> new CustomerNotFoundException());
 		customerJpaRepository.delete(managedCustomer);
-		return managedCustomer;
+		return modelMapper.map(managedCustomer, DeleteCustomerResponse.class);
 	}
 
 }

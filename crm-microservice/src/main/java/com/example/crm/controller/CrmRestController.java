@@ -38,7 +38,7 @@ import com.example.validation.TcKimlikNo;
 @Validated
 public class CrmRestController {
 	private CrmApplication crmApplication;
-	
+
 	public CrmRestController(CrmApplication crmApplication) {
 		this.crmApplication = crmApplication;
 		System.err.println(crmApplication.getClass().getName());
@@ -46,42 +46,35 @@ public class CrmRestController {
 
 	// GET /customers/11111111110
 	@GetMapping("{identity}")
-	public DetailedCustomerResponse getCustomerByIdentity(
-			@PathVariable @TcKimlikNo String identity) {
+	public DetailedCustomerResponse getCustomerByIdentity(@PathVariable @TcKimlikNo String identity) {
 		return crmApplication.findCustomerByIdentity(identity);
 	}
-	
+
 	@GetMapping
-	public List<CustomerResponse> getCustomersByPage(
-			@RequestParam(name = "page") @Min(0) int pageNo,
-			@RequestParam(name = "size") @Max(25) int pageSize
-			){
-		return crmApplication.findAllByPage(pageNo,pageSize);
+	public List<CustomerResponse> getCustomersByPage(@RequestParam(name = "page") @Min(0) int pageNo,
+			@RequestParam(name = "size") @Max(25) int pageSize) {
+		return crmApplication.findAllByPage(pageNo, pageSize);
 	}
-	
+
 	@PostMapping
 	public AcquireCustomerResponse acquireCustomer(@RequestBody @Validated AcquireCustomerRequest request) {
 		return crmApplication.addCustomer(request);
 	}
-	
+
 	@PutMapping("{identity}")
-	public UpdateCustomerResponse updateCustomer(
-			@PathVariable @Validated @TcKimlikNo String identity,
+	public UpdateCustomerResponse updateCustomer(@PathVariable @Validated @TcKimlikNo String identity,
 			@RequestBody @Validated UpdateCustomerRequest request) {
-		return crmApplication.updateCustomer(identity,request);
+		return crmApplication.updateCustomer(identity, request);
 	}
-	
+
 	@PatchMapping("{identity}")
-	public PatchCustomerResponse patchCustomer(
-			@PathVariable @Validated @TcKimlikNo String identity,
-			@RequestBody Map<String,Object> changes
-			) {
+	public PatchCustomerResponse patchCustomer(@PathVariable @Validated @TcKimlikNo String identity,
+			@RequestBody Map<String, Object> changes) {
 		return crmApplication.patchCustomer(identity, changes);
 	}
-	
+
 	@DeleteMapping("{identity}")
-	public DeleteCustomerResponse releaseCustomerByIdentity(
-			@PathVariable @TcKimlikNo String identity) {
+	public DeleteCustomerResponse releaseCustomerByIdentity(@PathVariable @TcKimlikNo String identity) {
 		return crmApplication.removeCustomerByIdentity(identity);
 	}
 }
