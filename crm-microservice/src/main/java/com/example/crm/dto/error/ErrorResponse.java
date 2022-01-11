@@ -1,4 +1,4 @@
-package com.example.crm.dto;
+package com.example.crm.dto.error;
 
 public class ErrorResponse {
 	private final String source;

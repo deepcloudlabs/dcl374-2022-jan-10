@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.crm.application.business.exception.CustomerAlreadyExistException;
 import com.example.crm.application.business.exception.CustomerNotFoundException;
-import com.example.crm.dto.ErrorResponse;
+import com.example.crm.dto.error.ErrorResponse;
 
 @RestControllerAdvice
 public class RestControllerErrorHandler {
