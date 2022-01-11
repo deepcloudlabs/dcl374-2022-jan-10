@@ -34,6 +34,7 @@ public class CrmRestController {
 	
 	public CrmRestController(CrmApplication crmApplication) {
 		this.crmApplication = crmApplication;
+		System.err.println(crmApplication.getClass().getName());
 	}
 
 
@@ -67,7 +68,7 @@ public class CrmRestController {
 	@PatchMapping("{identity}")
 	public Customer patchCustomer(
 			@PathVariable @Validated @TcKimlikNo String identity,
-			Map<String,Object> changes
+			@RequestBody Map<String,Object> changes
 			) {
 		return crmApplication.patchCustomer(identity, changes);
 	}

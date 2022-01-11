@@ -16,10 +16,13 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 
+import org.hibernate.annotations.DynamicUpdate;
+
 import com.example.validation.TcKimlikNo;
 
 @Entity
 @Table(name = "customers")
+@DynamicUpdate
 public class Customer {
 	@Id
 	@TcKimlikNo
