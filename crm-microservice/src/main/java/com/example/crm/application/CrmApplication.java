@@ -3,20 +3,27 @@ package com.example.crm.application;
 import java.util.List;
 import java.util.Map;
 
-import com.example.crm.entity.Customer;
+import com.example.crm.dto.request.AcquireCustomerRequest;
+import com.example.crm.dto.request.UpdateCustomerRequest;
+import com.example.crm.dto.response.AcquireCustomerResponse;
+import com.example.crm.dto.response.CustomerResponse;
+import com.example.crm.dto.response.DeleteCustomerResponse;
+import com.example.crm.dto.response.DetailedCustomerResponse;
+import com.example.crm.dto.response.PatchCustomerResponse;
+import com.example.crm.dto.response.UpdateCustomerResponse;
 
 public interface CrmApplication {
 
-	Customer findCustomerByIdentity(String identity);
+	DetailedCustomerResponse findCustomerByIdentity(String identity);
 
-	List<Customer> findAllByPage(int pageNo, int pageSize);
+	List<CustomerResponse> findAllByPage(int pageNo, int pageSize);
 
-	Customer addCustomer(Customer customer);
+	AcquireCustomerResponse addCustomer(AcquireCustomerRequest customer);
 
-	Customer updateCustomer(String identity, Customer customer);
+	UpdateCustomerResponse updateCustomer(String identity, UpdateCustomerRequest customer);
 
-	Customer patchCustomer(String identity, Map<String, Object> changes);
+	PatchCustomerResponse patchCustomer(String identity, Map<String, Object> changes);
 
-	Customer removeCustomerByIdentity(String identity);
+	DeleteCustomerResponse removeCustomerByIdentity(String identity);
 
 }

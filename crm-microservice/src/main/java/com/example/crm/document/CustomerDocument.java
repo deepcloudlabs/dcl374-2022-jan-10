@@ -1,51 +1,38 @@
-package com.example.crm.entity;
+package com.example.crm.document;
 
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 
-import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.example.crm.entity.CustomerType;
 import com.example.validation.TcKimlikNo;
 
-@Entity
-@Table(name = "customers")
-@DynamicUpdate
-public class Customer {
+@Document(collection="customers")
+public class CustomerDocument {
 	@Id
 	@TcKimlikNo
 	private String identity;
 	@NotBlank
 	private String fullname;
 	@Email
-	@Column(unique = true)
+	@Indexed(unique = true)
 	private String email;
-	@Column(unique = true)
+	@Indexed(unique = true)
 	private String phone;
 	@Max(2004)
 	private int birthYear;
-	@Lob
-	@Column(columnDefinition = "longblob")
-	private byte[] photo;
-	@Enumerated(EnumType.STRING)
+	private String photo;
 	private CustomerType type;
-	@OneToMany(orphanRemoval = true, 
-			cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
 	private List<Address> addresses;
 
-	public Customer() {
+	public CustomerDocument() {
 	}
 
 	public int getBirthYear() {
@@ -88,11 +75,11 @@ public class Customer {
 		this.phone = phone;
 	}
 
-	public byte[] getPhoto() {
+	public String getPhoto() {
 		return photo;
 	}
 
-	public void setPhoto(byte[] photo) {
+	public void setPhoto(String photo) {
 		this.photo = photo;
 	}
 
@@ -125,7 +112,7 @@ public class Customer {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Customer other = (Customer) obj;
+		CustomerDocument other = (CustomerDocument) obj;
 		return Objects.equals(identity, other.identity);
 	}
 

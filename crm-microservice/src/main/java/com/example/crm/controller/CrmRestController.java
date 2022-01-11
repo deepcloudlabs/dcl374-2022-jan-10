@@ -21,7 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.annotation.RequestScope;
 
 import com.example.crm.application.CrmApplication;
-import com.example.crm.entity.Customer;
+import com.example.crm.dto.request.AcquireCustomerRequest;
+import com.example.crm.dto.request.UpdateCustomerRequest;
+import com.example.crm.dto.response.AcquireCustomerResponse;
+import com.example.crm.dto.response.CustomerResponse;
+import com.example.crm.dto.response.DeleteCustomerResponse;
+import com.example.crm.dto.response.DetailedCustomerResponse;
+import com.example.crm.dto.response.PatchCustomerResponse;
+import com.example.crm.dto.response.UpdateCustomerResponse;
 import com.example.validation.TcKimlikNo;
 
 @RestController
@@ -37,16 +44,15 @@ public class CrmRestController {
 		System.err.println(crmApplication.getClass().getName());
 	}
 
-
 	// GET /customers/11111111110
 	@GetMapping("{identity}")
-	public Customer getCustomerByIdentity(
+	public DetailedCustomerResponse getCustomerByIdentity(
 			@PathVariable @TcKimlikNo String identity) {
 		return crmApplication.findCustomerByIdentity(identity);
 	}
 	
 	@GetMapping
-	public List<Customer> getCustomersByPage(
+	public List<CustomerResponse> getCustomersByPage(
 			@RequestParam(name = "page") @Min(0) int pageNo,
 			@RequestParam(name = "size") @Max(25) int pageSize
 			){
@@ -54,19 +60,19 @@ public class CrmRestController {
 	}
 	
 	@PostMapping
-	public Customer acquireCustomer(@RequestBody @Validated Customer customer) {
-		return crmApplication.addCustomer(customer);
+	public AcquireCustomerResponse acquireCustomer(@RequestBody @Validated AcquireCustomerRequest request) {
+		return crmApplication.addCustomer(request);
 	}
 	
 	@PutMapping("{identity}")
-	public Customer updateCustomer(
+	public UpdateCustomerResponse updateCustomer(
 			@PathVariable @Validated @TcKimlikNo String identity,
-			@RequestBody @Validated Customer customer) {
-		return crmApplication.updateCustomer(identity,customer);
+			@RequestBody @Validated UpdateCustomerRequest request) {
+		return crmApplication.updateCustomer(identity,request);
 	}
 	
 	@PatchMapping("{identity}")
-	public Customer patchCustomer(
+	public PatchCustomerResponse patchCustomer(
 			@PathVariable @Validated @TcKimlikNo String identity,
 			@RequestBody Map<String,Object> changes
 			) {
@@ -74,7 +80,7 @@ public class CrmRestController {
 	}
 	
 	@DeleteMapping("{identity}")
-	public Customer releaseCustomerByIdentity(
+	public DeleteCustomerResponse releaseCustomerByIdentity(
 			@PathVariable @TcKimlikNo String identity) {
 		return crmApplication.removeCustomerByIdentity(identity);
 	}
