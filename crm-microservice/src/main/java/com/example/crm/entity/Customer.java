@@ -1,5 +1,6 @@
 package com.example.crm.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -8,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
@@ -41,8 +43,7 @@ public class Customer {
 	private byte[] photo;
 	@Enumerated(EnumType.STRING)
 	private CustomerType type;
-	@OneToMany(orphanRemoval = true, 
-			cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+	@OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
 	private List<Address> addresses;
 
 	public Customer() {
@@ -109,7 +110,7 @@ public class Customer {
 	}
 
 	public void setAddresses(List<Address> addresses) {
-		this.addresses = addresses;
+		this.addresses = new ArrayList<>(addresses);
 	}
 
 	@Override

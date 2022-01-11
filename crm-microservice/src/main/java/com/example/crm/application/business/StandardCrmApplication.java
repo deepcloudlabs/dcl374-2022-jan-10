@@ -22,6 +22,7 @@ import com.example.crm.dto.response.DeleteCustomerResponse;
 import com.example.crm.dto.response.DetailedCustomerResponse;
 import com.example.crm.dto.response.PatchCustomerResponse;
 import com.example.crm.dto.response.UpdateCustomerResponse;
+import com.example.crm.entity.Address;
 import com.example.crm.entity.Customer;
 import com.example.crm.repository.CustomerJpaRepository;
 
@@ -71,8 +72,9 @@ public class StandardCrmApplication implements CrmApplication {
 		managedCustomer.setEmail(request.getEmail());
 		managedCustomer.setType(request.getType());
 		managedCustomer.setFullname(request.getFullname());
-		// managedCustomer.setAddresses(customer.getAddresses());
-		// customerJpaRepository.flush();
+		managedCustomer.getAddresses().clear();
+		managedCustomer.getAddresses().addAll(request.getAddresses().stream().map(address ->modelMapper.map(address,Address.class)).toList());
+		customerJpaRepository.save(managedCustomer);
 		return modelMapper.map(managedCustomer, UpdateCustomerResponse.class);
 	}
 
