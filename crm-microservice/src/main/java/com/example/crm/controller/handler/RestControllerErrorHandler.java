@@ -32,6 +32,7 @@ public class RestControllerErrorHandler {
 	@ExceptionHandler(RuntimeException.class)
 	@ResponseStatus(HttpStatus.BAD_GATEWAY)
 	public ErrorResponse handleRuntimeException(RuntimeException e) {
+		e.printStackTrace();
 		return new ErrorResponse("Application", e.getMessage());
 	}
 	

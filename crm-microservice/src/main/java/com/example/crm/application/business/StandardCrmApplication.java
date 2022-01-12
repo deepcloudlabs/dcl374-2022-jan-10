@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.bson.internal.Base64;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
@@ -41,7 +42,12 @@ public class StandardCrmApplication implements CrmApplication {
 	@Override
 	public DetailedCustomerResponse findCustomerByIdentity(String identity) {
 		var customer = customerJpaRepository.findById(identity).orElseThrow(() -> new CustomerNotFoundException());
-		return modelMapper.map(customer, DetailedCustomerResponse.class);
+		var detailedCustomerResponse = modelMapper.map(customer, DetailedCustomerResponse.class);
+		if (Objects.nonNull(customer.getPhoto()))
+		   detailedCustomerResponse.setPhoto(Base64.encode(customer.getPhoto()));
+		else
+			detailedCustomerResponse.setPhoto(null);
+		return detailedCustomerResponse;
 	}
 
 	@Override
@@ -68,14 +74,16 @@ public class StandardCrmApplication implements CrmApplication {
 		managedCustomer.setPhone(request.getPhone());
 		String photo = request.getPhoto();
 		if (Objects.nonNull(photo))
-		   managedCustomer.setPhoto(photo.getBytes());
+		   managedCustomer.setPhoto(Base64.decode(photo));
 		managedCustomer.setEmail(request.getEmail());
 		managedCustomer.setType(request.getType());
 		managedCustomer.setFullname(request.getFullname());
 		managedCustomer.getAddresses().clear();
 		managedCustomer.getAddresses().addAll(request.getAddresses().stream().map(address ->modelMapper.map(address,Address.class)).toList());
 		customerJpaRepository.save(managedCustomer);
-		return modelMapper.map(managedCustomer, UpdateCustomerResponse.class);
+		var updateCustomerResponse = modelMapper.map(managedCustomer, UpdateCustomerResponse.class);
+		updateCustomerResponse.setPhone(Base64.encode(managedCustomer.getPhoto()));
+		return updateCustomerResponse;
 	}
 
 	@Override
