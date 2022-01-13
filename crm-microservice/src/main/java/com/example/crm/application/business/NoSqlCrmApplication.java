@@ -3,14 +3,15 @@ package com.example.crm.application.business;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
 
 import com.example.crm.application.CrmApplication;
+import com.example.crm.application.business.exception.CustomerAlreadyExistException;
+import com.example.crm.application.business.exception.CustomerNotFoundException;
+import com.example.crm.document.CustomerDocument;
 import com.example.crm.dto.request.AcquireCustomerRequest;
 import com.example.crm.dto.request.UpdateCustomerRequest;
 import com.example.crm.dto.response.AcquireCustomerResponse;
@@ -19,35 +20,44 @@ import com.example.crm.dto.response.DeleteCustomerResponse;
 import com.example.crm.dto.response.DetailedCustomerResponse;
 import com.example.crm.dto.response.PatchCustomerResponse;
 import com.example.crm.dto.response.UpdateCustomerResponse;
-import com.example.crm.repository.CustomerJpaRepository;
+import com.example.crm.repository.CustomerMongoRepository;
 
-@Named // CDI
-@Scope("request") // Spring
-@RequestScoped // CDI
-//@Service
+@Service
 @ConditionalOnProperty(name="crm.persistence", havingValue = "mongodb")
 public class NoSqlCrmApplication implements CrmApplication {
-
-	// @Autowired
-	@Inject
-	private CustomerJpaRepository customerJpaRepository;
+	private CustomerMongoRepository customerMongoRepository;
+	private ModelMapper modelMapper;
 	
+	public NoSqlCrmApplication(CustomerMongoRepository customerMongoRepository, ModelMapper modelMapper) {
+		this.customerMongoRepository = customerMongoRepository;
+		this.modelMapper = modelMapper;
+	}
+
 	@Override
 	public DetailedCustomerResponse findCustomerByIdentity(String identity) {
-		// TODO Auto-generated method stub
-		return null;
+		var customer = customerMongoRepository.findById(identity)
+				.orElseThrow( () -> new CustomerNotFoundException());
+		return modelMapper.map(customer, DetailedCustomerResponse.class);
 	}
 
 	@Override
 	public List<CustomerResponse> findAllByPage(int pageNo, int pageSize) {
-		// TODO Auto-generated method stub
-		return null;
+		var page = PageRequest.of(pageNo, pageSize);
+		return customerMongoRepository.findAll(page)
+				                      .stream()
+				                      .map(cust -> modelMapper.map(cust, CustomerResponse.class))
+				                      .toList();
 	}
 
 	@Override
-	public AcquireCustomerResponse addCustomer(AcquireCustomerRequest customer) {
-		// TODO Auto-generated method stub
-		return null;
+	public AcquireCustomerResponse addCustomer(AcquireCustomerRequest request) {
+		String identity = request.getIdentity();
+		if (customerMongoRepository.existsById(identity )) {
+			throw new CustomerAlreadyExistException();
+		}
+		var customer = modelMapper.map(request, CustomerDocument.class);
+		return modelMapper.map(customerMongoRepository.save(customer),
+				AcquireCustomerResponse.class);
 	}
 
 	@Override
