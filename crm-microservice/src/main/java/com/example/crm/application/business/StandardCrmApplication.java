@@ -62,7 +62,8 @@ public class StandardCrmApplication implements CrmApplication {
 		if (customerJpaRepository.existsById(identity))
 			throw new CustomerAlreadyExistException();
 		var customer = modelMapper.map(request, Customer.class);
-		return modelMapper.map(customerJpaRepository.save(customer), AcquireCustomerResponse.class);
+		return modelMapper.map(customerJpaRepository.save(customer), 
+				AcquireCustomerResponse.class);
 	}
 
 	@Override

@@ -15,7 +15,7 @@ public class ModelMapperConfig {
 	   (context) -> {
 		  var source = context.getSource();
 		  var destination = context.getDestination();
-		  destination.setFullname(source.getFullname());
+		  destination.setFullname(source.getFullname().toLowerCase());
 		  destination.setPhoto(source.getPhoto());
 		  destination.setEmail(source.getEmail());
 		  destination.setType(source.getType());

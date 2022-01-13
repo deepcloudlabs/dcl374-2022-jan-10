@@ -2,15 +2,19 @@ package com.example.crm.application.business;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.example.crm.application.CrmApplication;
 import com.example.crm.application.business.exception.CustomerAlreadyExistException;
 import com.example.crm.application.business.exception.CustomerNotFoundException;
+import com.example.crm.application.event.CustomerAcquiredEvent;
+import com.example.crm.application.event.CustomerReleasedEvent;
 import com.example.crm.document.CustomerDocument;
 import com.example.crm.dto.request.AcquireCustomerRequest;
 import com.example.crm.dto.request.UpdateCustomerRequest;
@@ -24,51 +28,51 @@ import com.example.crm.entity.Customer;
 import com.example.crm.repository.CustomerMongoRepository;
 
 @Service
-@ConditionalOnProperty(name="crm.persistence", havingValue = "mongodb")
+@ConditionalOnProperty(name = "crm.persistence", havingValue = "mongodb")
 public class NoSqlCrmApplication implements CrmApplication {
 	private CustomerMongoRepository customerMongoRepository;
 	private ModelMapper modelMapper;
-	
-	public NoSqlCrmApplication(CustomerMongoRepository customerMongoRepository, ModelMapper modelMapper) {
+	private ApplicationEventPublisher eventPublisher;
+
+	public NoSqlCrmApplication(CustomerMongoRepository customerMongoRepository, ModelMapper modelMapper,
+			ApplicationEventPublisher eventPublisher) {
 		this.customerMongoRepository = customerMongoRepository;
 		this.modelMapper = modelMapper;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Override
 	public DetailedCustomerResponse findCustomerByIdentity(String identity) {
-		var customer = customerMongoRepository.findById(identity)
-				.orElseThrow( () -> new CustomerNotFoundException());
+		var customer = customerMongoRepository.findById(identity).orElseThrow(() -> new CustomerNotFoundException());
 		return modelMapper.map(customer, DetailedCustomerResponse.class);
 	}
 
 	@Override
 	public List<CustomerResponse> findAllByPage(int pageNo, int pageSize) {
 		var page = PageRequest.of(pageNo, pageSize);
-		return customerMongoRepository.findAll(page)
-				                      .stream()
-				                      .map(cust -> modelMapper.map(cust, CustomerResponse.class))
-				                      .toList();
+		return customerMongoRepository.findAll(page).stream().map(cust -> modelMapper.map(cust, CustomerResponse.class))
+				.toList();
 	}
 
 	@Override
 	public AcquireCustomerResponse addCustomer(AcquireCustomerRequest request) {
 		String identity = request.getIdentity();
-		if (customerMongoRepository.existsById(identity )) {
+		if (customerMongoRepository.existsById(identity)) {
 			throw new CustomerAlreadyExistException();
 		}
 		var customer = modelMapper.map(request, CustomerDocument.class);
-		return modelMapper.map(customerMongoRepository.save(customer),
-				AcquireCustomerResponse.class);
+		var customerAcquiredEvent = new CustomerAcquiredEvent(UUID.randomUUID().toString(), identity);
+		customer = customerMongoRepository.save(customer);
+		eventPublisher.publishEvent(customerAcquiredEvent);
+		return modelMapper.map(customer, AcquireCustomerResponse.class);
 	}
 
 	@Override
 	public UpdateCustomerResponse updateCustomer(String identity, UpdateCustomerRequest request) {
-		var customer = customerMongoRepository.findById(identity )
-				            .orElseThrow( () -> new CustomerNotFoundException());
-        modelMapper.map(request, customer);
+		var customer = customerMongoRepository.findById(identity).orElseThrow(() -> new CustomerNotFoundException());
+		modelMapper.map(request, customer);
 		customer.setIdentity(identity);
-		return modelMapper.map(customerMongoRepository.save(customer),
-					UpdateCustomerResponse.class);
+		return modelMapper.map(customerMongoRepository.save(customer), UpdateCustomerResponse.class);
 	}
 
 	@Override
@@ -88,16 +92,17 @@ public class NoSqlCrmApplication implements CrmApplication {
 				System.err.println(e.getMessage());
 			}
 		}
-		return modelMapper.map(customerMongoRepository.save(managedCustomer),
-				PatchCustomerResponse.class);
+		return modelMapper.map(customerMongoRepository.save(managedCustomer), PatchCustomerResponse.class);
 	}
 
 	@Override
 	public DeleteCustomerResponse removeCustomerByIdentity(String identity) {
-		var customer = customerMongoRepository.findById(identity)
-		   		.orElseThrow( () -> new CustomerNotFoundException());
+		var customer = customerMongoRepository.findById(identity).orElseThrow(() -> new CustomerNotFoundException());
 		customerMongoRepository.delete(customer);
-	    return modelMapper.map(customer,DeleteCustomerResponse.class);	
+		var customerReleasedEvent = new CustomerReleasedEvent(
+				modelMapper.map(customer, DetailedCustomerResponse.class));
+		eventPublisher.publishEvent(customerReleasedEvent);
+		return modelMapper.map(customer, DeleteCustomerResponse.class);
 	}
 
 }
