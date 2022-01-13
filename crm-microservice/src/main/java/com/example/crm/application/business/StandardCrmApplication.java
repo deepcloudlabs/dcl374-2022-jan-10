@@ -9,7 +9,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.crm.application.CrmApplication;
@@ -57,7 +56,7 @@ public class StandardCrmApplication implements CrmApplication {
 	}
 
 	@Override
-	@Transactional(isolation = Isolation.DEFAULT)
+	@Transactional
 	public AcquireCustomerResponse addCustomer(AcquireCustomerRequest request) {
 		var identity = request.getIdentity();
 		if (customerJpaRepository.existsById(identity))
@@ -82,7 +81,7 @@ public class StandardCrmApplication implements CrmApplication {
 		managedCustomer.getAddresses().addAll(request.getAddresses().stream().map(address ->modelMapper.map(address,Address.class)).toList());
 		customerJpaRepository.save(managedCustomer);
 		var updateCustomerResponse = modelMapper.map(managedCustomer, UpdateCustomerResponse.class);
-		updateCustomerResponse.setPhone(Base64.encode(managedCustomer.getPhoto()));
+		updateCustomerResponse.setPhoto(Base64.encode(managedCustomer.getPhoto()));
 		return updateCustomerResponse;
 	}
 
