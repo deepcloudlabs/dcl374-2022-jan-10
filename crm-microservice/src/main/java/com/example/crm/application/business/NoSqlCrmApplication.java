@@ -20,6 +20,7 @@ import com.example.crm.dto.response.DeleteCustomerResponse;
 import com.example.crm.dto.response.DetailedCustomerResponse;
 import com.example.crm.dto.response.PatchCustomerResponse;
 import com.example.crm.dto.response.UpdateCustomerResponse;
+import com.example.crm.entity.Customer;
 import com.example.crm.repository.CustomerMongoRepository;
 
 @Service
@@ -61,21 +62,42 @@ public class NoSqlCrmApplication implements CrmApplication {
 	}
 
 	@Override
-	public UpdateCustomerResponse updateCustomer(String identity, UpdateCustomerRequest customer) {
-		// TODO Auto-generated method stub
-		return null;
+	public UpdateCustomerResponse updateCustomer(String identity, UpdateCustomerRequest request) {
+		var customer = customerMongoRepository.findById(identity )
+				            .orElseThrow( () -> new CustomerNotFoundException());
+        modelMapper.map(request, customer);
+		customer.setIdentity(identity);
+		return modelMapper.map(customerMongoRepository.save(customer),
+					UpdateCustomerResponse.class);
 	}
 
 	@Override
-	public PatchCustomerResponse patchCustomer(String identity, Map<String, Object> changes) {
-		// TODO Auto-generated method stub
-		return null;
+	public PatchCustomerResponse patchCustomer(String identity, Map<String, Object> request) {
+		var managedCustomer = customerMongoRepository.findById(identity)
+				.orElseThrow(() -> new CustomerNotFoundException());
+		for (var entry : request.entrySet()) {
+			var attribute = entry.getKey();
+			var value = entry.getValue();
+			System.err.println(entry);
+			try {
+				var field = Customer.class.getDeclaredField(attribute);
+				field.setAccessible(true);
+				field.set(managedCustomer, value);
+				field.setAccessible(false);
+			} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+				System.err.println(e.getMessage());
+			}
+		}
+		return modelMapper.map(customerMongoRepository.save(managedCustomer),
+				PatchCustomerResponse.class);
 	}
 
 	@Override
 	public DeleteCustomerResponse removeCustomerByIdentity(String identity) {
-		// TODO Auto-generated method stub
-		return null;
+		var customer = customerMongoRepository.findById(identity)
+		   		.orElseThrow( () -> new CustomerNotFoundException());
+		customerMongoRepository.delete(customer);
+	    return modelMapper.map(customer,DeleteCustomerResponse.class);	
 	}
 
 }
