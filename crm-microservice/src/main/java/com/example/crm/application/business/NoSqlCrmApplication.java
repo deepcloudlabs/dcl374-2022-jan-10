@@ -5,9 +5,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.crm.application.CrmApplication;
@@ -26,19 +31,29 @@ import com.example.crm.dto.response.PatchCustomerResponse;
 import com.example.crm.dto.response.UpdateCustomerResponse;
 import com.example.crm.entity.Customer;
 import com.example.crm.repository.CustomerMongoRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @ConditionalOnProperty(name = "crm.persistence", havingValue = "mongodb")
 public class NoSqlCrmApplication implements CrmApplication {
+	private static final Logger logger = LoggerFactory.getLogger(NoSqlCrmApplication.class);
+
 	private CustomerMongoRepository customerMongoRepository;
 	private ModelMapper modelMapper;
 	private ApplicationEventPublisher eventPublisher;
-
+	private KafkaTemplate<String, String> kafkaTemplate;
+	private ObjectMapper objectMapper;
+	
 	public NoSqlCrmApplication(CustomerMongoRepository customerMongoRepository, ModelMapper modelMapper,
-			ApplicationEventPublisher eventPublisher) {
+			ApplicationEventPublisher eventPublisher, 
+			KafkaTemplate<String, String> kafkaTemplate,
+			ObjectMapper objectMapper) {
 		this.customerMongoRepository = customerMongoRepository;
 		this.modelMapper = modelMapper;
 		this.eventPublisher = eventPublisher;
+		this.kafkaTemplate = kafkaTemplate;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -64,6 +79,13 @@ public class NoSqlCrmApplication implements CrmApplication {
 		var customerAcquiredEvent = new CustomerAcquiredEvent(UUID.randomUUID().toString(), identity);
 		customer = customerMongoRepository.save(customer);
 		eventPublisher.publishEvent(customerAcquiredEvent);
+		String eventAsJson;
+		try {
+			eventAsJson = objectMapper.writeValueAsString(customerAcquiredEvent);
+			kafkaTemplate.send("crm-events", eventAsJson);
+		} catch (JsonProcessingException e) {
+			logger.error("Error while converting the event to json: {}",e.getMessage());
+		}
 		return modelMapper.map(customer, AcquireCustomerResponse.class);
 	}
 
