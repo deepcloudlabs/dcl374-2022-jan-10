@@ -3,6 +3,7 @@ package com.example.market.service;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
@@ -22,12 +23,15 @@ public class BinanceWebSocketClientService implements WebSocketHandler {
 	private WebSocketClient webSocketClient;	
 	private MarketMongoRepository marketMongoRepository;
 	private ObjectMapper objectMapper;
+	private ApplicationEventPublisher eventPublisher;
 	
 	public BinanceWebSocketClientService(WebSocketClient webSocketClient, MarketMongoRepository marketMongoRepository,
-			ObjectMapper objectMapper) {
+			ObjectMapper objectMapper,
+			ApplicationEventPublisher eventPublisher) {
 		this.webSocketClient = webSocketClient;
 		this.marketMongoRepository = marketMongoRepository;
 		this.objectMapper = objectMapper;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@PostConstruct
@@ -45,7 +49,8 @@ public class BinanceWebSocketClientService implements WebSocketHandler {
 		var tradeMessage = (String) message.getPayload();
 		var tradeDocument = objectMapper.readValue(tradeMessage, TradeDocument.class);
 		marketMongoRepository.save(tradeDocument);
-		System.err.println(tradeDocument);
+		eventPublisher.publishEvent(tradeDocument);
+		//System.err.println(tradeDocument);
 	}
 
 	@Override
