@@ -1,31 +1,32 @@
-package com.example.crm.dto.response;
+package com.example.entity;
 
+import java.io.Serializable;
 import java.util.List;
 
-import com.example.crm.document.Address;
-import com.example.crm.entity.CustomerType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-public class DeleteCustomerResponse {
-	private String identity;
+public class Customer implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2L;
+	private String kimlik;
 	private String fullname;
 	private String email;
 	private String phone;
 	private int birthYear;
-	@JsonIgnore
-	private String photo;
+	transient private String photo;
 	private CustomerType type;
 	private List<Address> addresses;
 
-	public DeleteCustomerResponse() {
+	public Customer() {
+		super();
 	}
 
-	public String getIdentity() {
-		return identity;
+	public String getKimlik() {
+		return kimlik;
 	}
 
-	public void setIdentity(String identity) {
-		this.identity = identity;
+	public void setKimlik(String kimlik) {
+		this.kimlik = kimlik;
 	}
 
 	public String getFullname() {
@@ -82,6 +83,12 @@ public class DeleteCustomerResponse {
 
 	public void setAddresses(List<Address> addresses) {
 		this.addresses = addresses;
+	}
+
+	@Override
+	public String toString() {
+		return "Customer [identity=" + kimlik + ", fullname=" + fullname + ", email=" + email + ", phone=" + phone
+				+ ", birthYear=" + birthYear + ", photo=" + photo + ", type=" + type + ", addresses=" + addresses + "]";
 	}
 
 }

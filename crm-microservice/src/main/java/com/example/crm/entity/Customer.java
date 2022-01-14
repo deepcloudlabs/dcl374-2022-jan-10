@@ -14,9 +14,11 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -45,6 +47,8 @@ public class Customer {
 	private CustomerType type;
 	@OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
 	private List<Address> addresses;
+	@Transient
+	private int age;
 
 	public Customer() {
 	}
@@ -54,7 +58,16 @@ public class Customer {
 	}
 
 	public void setBirthYear(int birthYear) {
+		this.age= 2022 - birthYear;
 		this.birthYear = birthYear;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
 	}
 
 	public String getIdentity() {
