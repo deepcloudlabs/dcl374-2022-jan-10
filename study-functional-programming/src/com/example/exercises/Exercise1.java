@@ -44,11 +44,10 @@ public class Exercise1 {
 		Elma                isEmpPartTime2= Exercise1::isPartTimeEmployee; 
 		Predicate<Employee> ifPartTime = ifFullTime.negate();
 		ToDoubleFunction<Employee> toSalary = employee -> employee.getSalary();
-		
 		var maxSalaryToPartTimeEmployees =
 		employees.stream()              // Stream<Employee> , intermediate function
 		         .filter(ifPartTime)    // Stream<Employee> , intermediate function
-		         .mapToDouble(toSalary) // Stream<Double>   , intermediate function
+		         .mapToDouble(Employee::getSalary) // DoubleStream   , intermediate function
 		         .max()
 		         .getAsDouble();        //                    terminal function
 		System.err.println(maxSalaryToPartTimeEmployees);
