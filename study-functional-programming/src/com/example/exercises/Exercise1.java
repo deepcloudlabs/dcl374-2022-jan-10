@@ -25,6 +25,7 @@ public class Exercise1 {
 		employees.add(james);
 		employees.add(jin);
 	}
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {
 		// functions: 1) higher-order function: functions take function as a parameter
 		//           Example: Stream API function

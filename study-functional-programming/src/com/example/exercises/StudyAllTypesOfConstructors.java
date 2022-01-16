@@ -4,6 +4,7 @@ import com.example.domain.A;
 
 public class StudyAllTypesOfConstructors {
 
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws ClassNotFoundException {
 		Class.forName("com.example.domain.A"); // Class loader -> JVM
 //		A a1 = new A();    // {} -> A()

@@ -2,6 +2,7 @@ package com.example.domain;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+@SuppressWarnings("unused")
 public class A {
 	private int x = 42; // instance -> new 
 	private static int y = 42; // global -> one copy
