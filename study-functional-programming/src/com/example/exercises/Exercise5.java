@@ -2,6 +2,7 @@ package com.example.exercises;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.example.domain.Department;
 import com.example.domain.Employee;
@@ -26,7 +27,10 @@ public class Exercise5 {
 
 	public static void main(String[] args) {
 		// Find the total salaries of Full-time and Part-time employees
-		
+		var totalSalaries =
+		employees.stream()
+		         .collect(Collectors.groupingBy(Employee::isFulltime,Collectors.summingDouble(Employee::getSalary)));
+		totalSalaries.forEach((isFullTime,totalSalary) -> System.err.printf("%s: %f\n",isFullTime?"Full-time":"Part-time",totalSalary));		
 	}
 
 }

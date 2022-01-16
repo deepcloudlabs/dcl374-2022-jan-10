@@ -2,6 +2,7 @@ package com.example.exercises;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.example.domain.Department;
 import com.example.domain.Employee;
@@ -26,7 +27,8 @@ public class Exercise8 {
 
 	public static void main(String[] args) {
 		// Find the minimum, the maximum and the average salaries
-		
+		var salarySummary = employees.stream().collect(Collectors.summarizingDouble(Employee::getSalary));
+		System.err.println(salarySummary);
 	}
 
 }
