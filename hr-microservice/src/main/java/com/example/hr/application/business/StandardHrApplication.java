@@ -73,9 +73,6 @@ public class StandardHrApplication implements HrApplication {
 	@Override
 	public EmployeeResponse findEmployeeByIdentity(String identity) {
 		var employee = employeeMongoRepository.findById(identity).orElseThrow(() -> new EmployeeNotFoundException());
-		employeeMongoRepository.delete(employee);
-		var employeeFiredEvent = new EmployeeFiredEvent(modelMapper.map(employee, EmployeeResponse.class));
-		eventPublisher.publishEvent(employeeFiredEvent);
 		return modelMapper.map(employee, EmployeeResponse.class);
 	}
 
