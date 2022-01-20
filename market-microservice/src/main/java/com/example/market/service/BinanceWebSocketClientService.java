@@ -50,7 +50,7 @@ public class BinanceWebSocketClientService implements WebSocketHandler {
 		var tradeDocument = objectMapper.readValue(tradeMessage, TradeDocument.class);
 		marketMongoRepository.save(tradeDocument);
 		eventPublisher.publishEvent(tradeDocument);
-		//System.err.println(tradeDocument);
+		System.err.println(tradeDocument);
 	}
 
 	@Override

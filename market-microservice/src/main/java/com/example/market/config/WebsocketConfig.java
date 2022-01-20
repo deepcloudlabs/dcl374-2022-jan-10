@@ -21,7 +21,8 @@ public class WebsocketConfig implements WebSocketConfigurer {
 	
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		registry.addHandler(marketWebsocketService, "/trades");
+		registry.addHandler(marketWebsocketService, "/trades").setAllowedOrigins("*");
+		
 	}
 
 	@Bean
